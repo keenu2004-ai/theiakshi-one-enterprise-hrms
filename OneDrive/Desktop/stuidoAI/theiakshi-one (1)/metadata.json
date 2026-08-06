@@ -1,0 +1,6 @@
+{
+  "name": "THEIAKSHI ONE",
+  "description": "Enterprise Human Resource Management System (HRMS) for THEIAKSHI ENTERPRISES",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
