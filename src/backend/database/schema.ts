@@ -1,7 +1,7 @@
-import { PGlite } from '@electric-sql/pglite';
+import { Pool } from 'pg';
 
-export async function initializeSchema(db: PGlite) {
-  await db.exec(`
+export async function initializeSchema(db: Pool) {
+  await db.query(`
     CREATE TABLE IF NOT EXISTS branches (
       id SERIAL PRIMARY KEY,
       name VARCHAR(255) NOT NULL,
@@ -301,7 +301,6 @@ export async function initializeSchema(db: PGlite) {
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     );
 
-    -- Create Indexes for performance
     CREATE INDEX IF NOT EXISTS idx_emp_code ON employees(employee_code);
     CREATE INDEX IF NOT EXISTS idx_emp_email ON employees(email);
     CREATE INDEX IF NOT EXISTS idx_emp_dept ON employees(department_id);
