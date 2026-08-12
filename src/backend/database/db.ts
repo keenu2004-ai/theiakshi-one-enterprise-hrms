@@ -1,12 +1,23 @@
-import { PGlite } from '@electric-sql/pglite';
+import { Pool } from 'pg';
+import 'dotenv/config';
 
 class DatabaseService {
-  private db: PGlite | null = null;
+  private db: Pool | null = null;
   private isInitialized = false;
 
-  async getDb(): Promise<PGlite> {
+  async getDb(): Promise<Pool> {
     if (!this.db) {
-      this.db = new PGlite();
+      const connectionString = process.env.DATABASE_URL;
+      if (!connectionString) {
+        throw new Error('DATABASE_URL is not configured');
+      }
+      this.db = new Pool({
+        connectionString,
+        ssl: { rejectUnauthorized: false },
+        max: Number(process.env.DB_POOL_MAX || 5),
+        idleTimeoutMillis: 30000,
+        connectionTimeoutMillis: 10000,
+      });
     }
     if (!this.isInitialized) {
       await this.init();
@@ -17,23 +28,25 @@ class DatabaseService {
   private async init() {
     if (!this.db) return;
     this.isInitialized = true;
-    console.log('[PostgreSQL PGlite Engine] Initializing database schema...');
+    console.log('[THEIAKSHI Backend] Initializing Neon PostgreSQL schema...');
     const { initializeSchema } = await import('./schema.js');
     await initializeSchema(this.db);
-    const { seedDatabase } = await import('./seed.js');
-    await seedDatabase(this.db);
-    console.log('[PostgreSQL PGlite Engine] Database initialized & seeded successfully.');
+    if (process.env.SEED_DATABASE === 'true') {
+      const { seedDatabase } = await import('./seed.js');
+      await seedDatabase(this.db);
+    }
+    console.log('[THEIAKSHI Backend] Neon PostgreSQL initialized successfully.');
   }
 
   async query<T = any>(sql: string, params: any[] = []): Promise<{ rows: T[] }> {
     const db = await this.getDb();
     const result = await db.query(sql, params);
-    return { rows: (result.rows as T[]) || [] };
+    return { rows: result.rows as T[] };
   }
 
   async exec(sql: string): Promise<void> {
     const db = await this.getDb();
-    await db.exec(sql);
+    await db.query(sql);
   }
 }
 
